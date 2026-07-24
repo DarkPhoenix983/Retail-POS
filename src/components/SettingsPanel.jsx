@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Icono } from './Icono'
+import { borrarHistorialVentasCompleto } from '../services/db'
 
 export function SettingsPanel ({ nombreTienda, guardarNombreTienda, mostrarToast }) {
   const [nombreLocal, setNombreLocal] = useState(nombreTienda)
@@ -10,6 +11,18 @@ export function SettingsPanel ({ nombreTienda, guardarNombreTienda, mostrarToast
     setGuardado(true)
     mostrarToast('Configuración guardada correctamente')
     setTimeout(() => setGuardado(false), 2000)
+  }
+
+  const handleBorrarHistorial = async () => {
+    if (window.confirm('¿Estás seguro de que deseas eliminar TODAS las ventas del historial? Esta acción no se puede deshacer y NO restaurará el stock.')) {
+      try {
+        await borrarHistorialVentasCompleto()
+        mostrarToast('Historial de ventas eliminado correctamente', 'success')
+      } catch (e) {
+        console.error(e)
+        mostrarToast('Error al eliminar el historial', 'error')
+      }
+    }
   }
 
   return (
@@ -113,6 +126,32 @@ export function SettingsPanel ({ nombreTienda, guardarNombreTienda, mostrarToast
             >
               Esc
             </span>
+          </div>
+        </div>
+
+        {/* Gestión de Datos */}
+        <div className='settings-section'>
+          <h3>
+            <Icono tipo='mas' className='w-5 h-5' style={{ color: 'var(--color-danger)' }} />
+            Gestión de Datos
+          </h3>
+          <div className='settings-row'>
+            <div>
+              <label>Limpiar Historial</label>
+              <p>Elimina permanentemente todas las ventas registradas</p>
+            </div>
+            <button
+              onClick={handleBorrarHistorial}
+              className='btn-outline'
+              style={{
+                padding: '6px 16px',
+                fontSize: '0.8rem',
+                color: 'var(--color-danger)',
+                borderColor: 'var(--color-danger)'
+              }}
+            >
+              Borrar todo
+            </button>
           </div>
         </div>
 

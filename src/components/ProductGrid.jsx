@@ -51,8 +51,9 @@ export function ProductGrid ({
       <div className='flex-1 overflow-y-scroll pr-1'>
         <div className='grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
           {productos.map(producto => {
-            const esBajoStock = producto.stock > 0 && producto.stock <= 5
-            const esSinStock = producto.stock === 0
+            const esInfinito = producto.stock === -1
+            const esBajoStock = !esInfinito && producto.stock > 0 && producto.stock <= 5
+            const esSinStock = !esInfinito && producto.stock === 0
 
             return (
               <button
@@ -75,7 +76,7 @@ export function ProductGrid ({
                         : 'badge-stock-ok'
                   } style={{ fontSize: '0.85rem' }}
                   >
-                    Stock: {producto.stock}
+                    Stock: {esInfinito ? '∞' : producto.stock}
                   </span>
                 </div>
                 <h3 style={{

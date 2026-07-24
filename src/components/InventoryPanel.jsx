@@ -13,6 +13,7 @@ export function InventoryPanel ({
   const [modo, setModo] = useState('lista')
   const [productoActual, setProductoActual] = useState(null)
   const [esNuevaCategoria, setEsNuevaCategoria] = useState(false)
+  const [ultimaCategoria, setUltimaCategoria] = useState(null)
 
   const categoriasFiltradas = Array.from(new Set([
     'Cuadernos',
@@ -35,7 +36,11 @@ export function InventoryPanel ({
   const guardarProducto = async (e) => {
     e.preventDefault()
     try {
-      const productoParaGuardar = { ...productoActual }
+      const productoParaGuardar = {
+        ...productoActual,
+        precio: parseFloat(productoActual.precio) || 0,
+        stock: (productoActual.stock === '' || parseInt(productoActual.stock, 10) === -1) ? -1 : (parseInt(productoActual.stock, 10) || 0)
+      }
       if (!productoParaGuardar.codigo || productoParaGuardar.codigo.trim() === '') {
         productoParaGuardar.codigo = `SKU-${Date.now().toString().slice(-6)}`
       }
@@ -72,6 +77,7 @@ export function InventoryPanel ({
       if (modo === 'crear') {
         await agregarProducto(productoParaGuardar)
         mostrarToast('Producto agregado exitosamente')
+        setUltimaCategoria(productoParaGuardar.categoria)
       } else if (modo === 'editar') {
         await actualizarProducto(productoParaGuardar)
         mostrarToast('Producto actualizado exitosamente')
@@ -124,6 +130,7 @@ export function InventoryPanel ({
                 <input
                   required
                   type='text'
+                  placeholder='Ingrese el nombre del producto'
                   value={productoActual.nombre}
                   onChange={e => setProductoActual({ ...productoActual, nombre: e.target.value })}
                   className='input-field'
@@ -200,24 +207,25 @@ export function InventoryPanel ({
                 <input
                   required
                   type='number'
+                  placeholder='$0'
                   step='0.01'
                   min='0'
                   value={productoActual.precio}
-                  onChange={e => setProductoActual({ ...productoActual, precio: parseFloat(e.target.value) || 0 })}
+                  onChange={e => setProductoActual({ ...productoActual, precio: e.target.value })}
                   className='input-field'
                 />
               </div>
 
               <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '6px', color: 'var(--color-text-secondary)' }}>
-                  Stock Disponible
+                  Stock Disponible (Vacío o -1 para infinito)
                 </label>
                 <input
-                  required
                   type='number'
-                  min='0'
+                  placeholder='$0'
+                  min='-1'
                   value={productoActual.stock}
-                  onChange={e => setProductoActual({ ...productoActual, stock: parseInt(e.target.value, 10) || 0 })}
+                  onChange={e => setProductoActual({ ...productoActual, stock: e.target.value })}
                   className='input-field'
                 />
               </div>
@@ -255,8 +263,8 @@ export function InventoryPanel ({
         </h2>
         <button
           onClick={() => {
-            const catInicial = (categorias || []).filter(cat => cat !== 'Todas' && cat !== 'Todo')[0] || 'General'
-            setProductoActual({ nombre: '', codigo: '', categoria: catInicial, precio: 0, stock: 0 })
+            const catInicial = ultimaCategoria || (categorias || []).filter(cat => cat !== 'Todas' && cat !== 'Todo')[0] || 'General'
+            setProductoActual({ nombre: '', codigo: '', categoria: catInicial, precio: '', stock: '' })
             setEsNuevaCategoria(false)
             setModo('crear')
           }}
@@ -311,8 +319,8 @@ export function InventoryPanel ({
                 </td>
                 <td style={{ fontWeight: 500 }}>${producto.precio.toFixed(2)}</td>
                 <td>
-                  <span className={producto.stock <= 5 ? 'badge-stock-low' : 'badge-stock-ok'}>
-                    {producto.stock}
+                  <span className={producto.stock === -1 ? 'badge-stock-ok' : producto.stock <= 5 ? 'badge-stock-low' : 'badge-stock-ok'}>
+                    {producto.stock === -1 ? '∞' : producto.stock}
                   </span>
                 </td>
                 <td style={{ textAlign: 'right' }}>

@@ -26,6 +26,7 @@ export function usePOS () {
     busqueda, setBusqueda,
     categoriaActiva, setCategoriaActiva,
     productos,
+    productosTodos,
     categorias,
     cargarCategoriasYProductos
   } = useProducts(dbLista)
@@ -97,6 +98,7 @@ export function usePOS () {
     categoriaActiva,
     setCategoriaActiva,
     productos,
+    productosTodos,
     categorias,
     cargarCategoriasYProductos,
 

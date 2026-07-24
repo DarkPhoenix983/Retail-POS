@@ -12,20 +12,32 @@ function getDb () {
 
 const INICIAL_PRODUCTS = [
   {
-    id: 1,
-    nombre: 'Lapiz verde',
-    categoria: 'Escritura',
-    precio: 5.0,
-    stock: 200,
-    codigo: 'SDK-19923'
+    nombre: 'Resistol blanco 20g',
+    categoria: 'Pegamentos',
+    precio: 15.5,
+    stock: 20,
+    codigo: ''
   },
   {
-    id: 2,
-    nombre: 'Lapiz verde',
-    categoria: 'Escritura',
-    precio: 5.0,
-    stock: 200,
-    codigo: 'SDK-19923'
+    nombre: 'Resistol blanco 50g',
+    categoria: 'Pegamentos',
+    precio: 25.5,
+    stock: 15,
+    codigo: 'RES-B-002'
+  },
+  {
+    nombre: 'Resistol blanco 1kg',
+    categoria: 'Pegamentos',
+    precio: 50,
+    stock: 10,
+    codigo: 'RES-B-003'
+  },
+  {
+    nombre: 'Resistol blanco 5kg',
+    categoria: 'Pegamentos',
+    precio: 150,
+    stock: 5,
+    codigo: 'RES-B-004'
   }
 ]
 
@@ -147,9 +159,9 @@ export async function registrarVenta (items, total, pagoCon) {
       [ventaId, item.id, item.nombre, item.cantidad, item.precio, subtotal]
     )
 
-    // Descontar del stock
+    // Descontar del stock (ignorar si es -1, o sea, infinito)
     await db.execute(
-      'UPDATE productos SET stock = MAX(0, stock - $1) WHERE id = $2',
+      'UPDATE productos SET stock = MAX(0, stock - $1) WHERE id = $2 AND stock != -1',
       [item.cantidad, item.id]
     )
   }
@@ -211,6 +223,13 @@ export async function eliminarProducto (id) {
   )
 }
 
+// Borrar todo el historial de ventas
+export async function borrarHistorialVentasCompleto () {
+  if (!getDb()) throw new Error('DB no inicializada')
+  await db.execute('DELETE FROM ventas_items')
+  await db.execute('DELETE FROM ventas')
+}
+
 // Resetear todas las ventas del día actual
 export async function resetearVentasDia () {
   if (!getDb()) throw new Error('DB no inicializada')
@@ -228,4 +247,56 @@ export async function resetearVentasDia () {
     'DELETE FROM ventas WHERE fecha LIKE $1',
     [t]
   )
+}
+
+// Obtener historial de ventas con sus items
+export async function eliminarVenta (id) {
+  if (!getDb()) throw new Error('DB no inicializada')
+
+  // Obtener items de la venta para restaurar stock
+  const items = await db.select(
+    'SELECT producto_id, cantidad FROM ventas_items WHERE ventas_id = $1',
+    [id]
+  )
+
+  // Restaurar stock (ignorar si es -1, o sea, infinito)
+  for (const item of items) {
+    await db.execute(
+      'UPDATE productos SET stock = stock + $1 WHERE id = $2 AND stock != -1',
+      [item.cantidad, item.producto_id]
+    )
+  }
+
+  // Eliminar items
+  await db.execute(
+    'DELETE FROM ventas_items WHERE ventas_id = $1',
+    [id]
+  )
+
+  // Eliminar venta
+  await db.execute(
+    'DELETE FROM ventas WHERE id = $1',
+    [id]
+  )
+}
+
+// Obtener historial de ventas con sus items
+export async function obtenerHistorialVentas () {
+  if (!getDb()) return []
+
+  // ventas ordenadas por fecha
+  const ventas = await db.select(
+    'SELECT * FROM ventas ORDER BY fecha DESC'
+  )
+
+  // Por cada venta, traer sus items
+  for (const venta of ventas) {
+    const items = await db.select(
+      'SELECT * FROM ventas_items WHERE ventas_id = $1',
+      [venta.id]
+    )
+    venta.items = items
+  }
+
+  return ventas
 }

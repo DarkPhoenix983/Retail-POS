@@ -5,6 +5,7 @@ import { Cart } from './components/Cart'
 import { PaymentModal } from './components/PaymentModal'
 import { ReceiptModal } from './components/ReceiptModal'
 import { InventoryPanel } from './components/InventoryPanel'
+import { SalesHistoryPanel } from './components/SalesHistoryPanel'
 import { SettingsPanel } from './components/SettingsPanel'
 import { Toast } from './components/Toast'
 
@@ -24,6 +25,7 @@ function App () {
   const titulos = {
     pos: 'Punto de Venta',
     inventario: 'Inventario',
+    historial: 'Historial de Ventas',
     configuracion: 'Configuración'
   }
 
@@ -82,9 +84,15 @@ function App () {
 
           {pos.vistaActiva === 'inventario' && (
             <InventoryPanel
-              productos={pos.productos}
+              productos={pos.productosTodos}
               categorias={pos.categorias}
               cargarProductos={pos.cargarCategoriasYProductos}
+              mostrarToast={pos.mostrarToast}
+            />
+          )}
+
+          {pos.vistaActiva === 'historial' && (
+            <SalesHistoryPanel
               mostrarToast={pos.mostrarToast}
             />
           )}

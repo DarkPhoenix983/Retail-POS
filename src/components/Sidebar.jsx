@@ -10,6 +10,7 @@ export function Sidebar ({
   const navItems = [
     { id: 'pos', label: 'Punto de Venta', icono: 'tienda' },
     { id: 'inventario', label: 'Inventario', icono: 'inventario' },
+    { id: 'historial', label: 'Historial de Ventas', icono: 'historial' },
     { id: 'configuracion', label: 'configuracion', icono: 'config' }
   ]
 

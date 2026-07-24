@@ -4,7 +4,7 @@ export function useCart (mostrarToast) {
   const [carrito, setCarrito] = useState([])
 
   const agregarAlCarrito = useCallback((producto) => {
-    if (producto.stock <= 0) {
+    if (producto.stock === 0) {
       mostrarToast('¡Sin stock!', 'error')
       return
     }
@@ -12,7 +12,7 @@ export function useCart (mostrarToast) {
     setCarrito(carritoActual => {
       const existente = carritoActual.find(item => item.id === producto.id)
       if (existente) {
-        if (existente.cantidad >= producto.stock) {
+        if (producto.stock !== -1 && existente.cantidad >= producto.stock) {
           mostrarToast('¡Stock insuficiente!', 'error')
           return carritoActual
         }
@@ -31,7 +31,7 @@ export function useCart (mostrarToast) {
         if (item.id !== id) return item
         const nuevaCantidad = item.cantidad + delta
         if (nuevaCantidad <= 0) return item
-        if (nuevaCantidad > item.stock) {
+        if (item.stock !== -1 && nuevaCantidad > item.stock) {
           mostrarToast('¡Stock insuficiente!', 'error')
           return item
         }
